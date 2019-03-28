@@ -39,7 +39,7 @@
 #include <iostream>
 #include <time.h>
 #include <errno.h>
-#include <SpikeLib.h>
+//#include <SpikeLib.h>
 #include "ZmqInterface.h"
 #include "ZmqInterfaceEditor.h"
 
@@ -339,7 +339,7 @@ void ZmqInterface::run()
 
 
 
-
+// TODO: make sure the call is still passing what is expected
 int ZmqInterface::sendData(float *data, int nChannels, int nSamples, int nRealSamples)
 {
     
@@ -395,82 +395,88 @@ int ZmqInterface::sendData(float *data, int nChannels, int nSamples, int nRealSa
     return size;
 }
 
-
-int ZmqInterface::sendSpikeEvent(MidiMessage &event)
+// TODO: update... maybe do nothing for now
+int ZmqInterface::sendSpikeEvent(const MidiMessage &event)
 {
-    messageNumber++;
-    int size = 0;
 
-    const uint8_t* dataptr = event.getRawData();
-    int bufferSize = event.getRawDataSize();
-    if(bufferSize)
-    {
-        SpikeObject spike;
-        bool isValid = unpackSpike(&spike, dataptr, bufferSize);
-        if(isValid)
-        {
-            DynamicObject::Ptr obj = new DynamicObject();
-            obj->setProperty("message_no", messageNumber);
-            obj->setProperty("type", "spike");
-            DynamicObject::Ptr c_obj = new DynamicObject();
-            c_obj->setProperty("timestamp", (int64)spike.timestamp);
-            c_obj->setProperty("timestamp_software",
-                             (int64)spike.timestamp_software);
-            c_obj->setProperty("n_channels", spike.nChannels);
-            c_obj->setProperty("n_samples", spike.nSamples);
-            c_obj->setProperty("electrode_id", spike.electrodeID);
-            c_obj->setProperty("channel", spike.channel);
-            c_obj->setProperty("source", spike.source);
-            var c_var(spike.color[0]);
-            c_var.append(spike.color[1]);
-            c_var.append(spike.color[2]);
-            c_obj->setProperty("color", c_var);
-            var p_var(spike.pcProj[0]);
-            p_var.append(spike.pcProj[1]);
-            c_obj->setProperty("pc_proj", p_var);
-            var g_var(spike.gain[0]);
-            for(int i = 1; i < spike.nChannels; i++)
-                g_var.append(spike.gain[i]);
-            c_obj->setProperty("gain", g_var);
-            var t_var = var(spike.threshold[0]);
-            for(int i = 1; i < spike.nChannels; i++)
-                t_var.append(spike.threshold[i]);
-            c_obj->setProperty("threshold", t_var);
-            obj->setProperty("spike", var(c_obj));
-            var json (obj);
-            String s = JSON::toString(json);
-            void *headerData = (void *)s.toRawUTF8();
-            size_t headerSize = s.length();
-            
-            
-            zmq_msg_t messageEnvelope;
-            zmq_msg_init_size(&messageEnvelope, strlen("EVENT")+1);
-            memcpy(zmq_msg_data(&messageEnvelope), "EVENT", strlen("EVENT")+1);
-            size = zmq_msg_send(&messageEnvelope, socket, ZMQ_SNDMORE);
-            jassert(size != -1);
-            zmq_msg_close(&messageEnvelope);
-
-            zmq_msg_t messageHeader;
-            zmq_msg_init_size(&messageHeader, headerSize);
-            memcpy(zmq_msg_data(&messageHeader), headerData, headerSize);
-            size = zmq_msg_send(&messageHeader, socket, ZMQ_SNDMORE);
-            jassert(size != -1);
-            zmq_msg_close(&messageHeader);
-            zmq_msg_t message;
-            zmq_msg_init_size(&message, spike.nChannels*spike.nSamples);
-            memcpy(zmq_msg_data(&message), spike.data, spike.nChannels*spike.nSamples);
-            size = zmq_msg_send(&message, socket, 0);
-            
-        }
-    }
+    // TODO: fix this... later (I don't need spike events today)
+    
+//    messageNumber++;
+//    int size = 0;
+//
+//    const uint8_t* dataptr = event.getRawData();
+//    int bufferSize = event.getRawDataSize();
+//
+//    // TODO: replace SpikeObject with SpikeEvent
+//
+//    if(bufferSize)
+//    {
+//        SpikeObject spike;
+//        bool isValid = unpackSpike(&spike, dataptr, bufferSize);
+//        if(isValid)
+//        {
+//            DynamicObject::Ptr obj = new DynamicObject();
+//            obj->setProperty("message_no", messageNumber);
+//            obj->setProperty("type", "spike");
+//            DynamicObject::Ptr c_obj = new DynamicObject();
+//            c_obj->setProperty("timestamp", (int64)spike.timestamp);
+//            c_obj->setProperty("timestamp_software",
+//                             (int64)spike.timestamp_software);
+//            c_obj->setProperty("n_channels", spike.nChannels);
+//            c_obj->setProperty("n_samples", spike.nSamples);
+//            c_obj->setProperty("electrode_id", spike.electrodeID);
+//            c_obj->setProperty("channel", spike.channel);
+//            c_obj->setProperty("source", spike.source);
+//            var c_var(spike.color[0]);
+//            c_var.append(spike.color[1]);
+//            c_var.append(spike.color[2]);
+//            c_obj->setProperty("color", c_var);
+//            var p_var(spike.pcProj[0]);
+//            p_var.append(spike.pcProj[1]);
+//            c_obj->setProperty("pc_proj", p_var);
+//            var g_var(spike.gain[0]);
+//            for(int i = 1; i < spike.nChannels; i++)
+//                g_var.append(spike.gain[i]);
+//            c_obj->setProperty("gain", g_var);
+//            var t_var = var(spike.threshold[0]);
+//            for(int i = 1; i < spike.nChannels; i++)
+//                t_var.append(spike.threshold[i]);
+//            c_obj->setProperty("threshold", t_var);
+//            obj->setProperty("spike", var(c_obj));
+//            var json (obj);
+//            String s = JSON::toString(json);
+//            void *headerData = (void *)s.toRawUTF8();
+//            size_t headerSize = s.length();
+//
+//
+//            zmq_msg_t messageEnvelope;
+//            zmq_msg_init_size(&messageEnvelope, strlen("EVENT")+1);
+//            memcpy(zmq_msg_data(&messageEnvelope), "EVENT", strlen("EVENT")+1);
+//            size = zmq_msg_send(&messageEnvelope, socket, ZMQ_SNDMORE);
+//            jassert(size != -1);
+//            zmq_msg_close(&messageEnvelope);
+//
+//            zmq_msg_t messageHeader;
+//            zmq_msg_init_size(&messageHeader, headerSize);
+//            memcpy(zmq_msg_data(&messageHeader), headerData, headerSize);
+//            size = zmq_msg_send(&messageHeader, socket, ZMQ_SNDMORE);
+//            jassert(size != -1);
+//            zmq_msg_close(&messageHeader);
+//            zmq_msg_t message;
+//            zmq_msg_init_size(&message, spike.nChannels*spike.nSamples);
+//            memcpy(zmq_msg_data(&message), spike.data, spike.nChannels*spike.nSamples);
+//            size = zmq_msg_send(&message, socket, 0);
+//
+//        }
+//    }
     return 0;
 }
 
 int ZmqInterface::sendEvent( uint8 type,
                              int sampleNum,
-                             uint8 eventId,
-                             uint8 eventChannel,
-                             uint8 numBytes,
+                             uint16_t eventId,
+                             uint16_t eventChannel,
+                             uint8_t numBytes,
                              const uint8* eventData)
 {
     int size;
@@ -613,30 +619,44 @@ void ZmqInterface::resetConnections()
     return;
 }
 
-void ZmqInterface::handleEvent(int eventType, MidiMessage& event, int sampleNum)
+void ZmqInterface::handleEvent(const EventChannel* channelInfo, const MidiMessage& event, int samplePosition)
 {
-    
     const uint8* dataptr = event.getRawData();
     int size = event.getRawDataSize();
+    
+    // spike events are handled in another method
+    uint8 eventType = *dataptr;
+    if(eventType == SPIKE_EVENT) {
+        sendSpikeEvent(event);
+        return;
+    }
+    
     uint8 numBytes;
-    if(size > 6)
-        numBytes = size - 6;
+    if(size > 18)
+        numBytes = size - 18;
     else
         numBytes = 0;
-    int eventId = *(dataptr+2);
-    int eventChannel = *(dataptr+3);
+    // TODO: not sure what eventId used to be... for now we're using "Source Event index"
+    uint16_t eventId = *(dataptr+6);
+    uint64_t sampleNum = *(dataptr+8);
+    uint16_t eventChannel = *(dataptr+16);
     
-    if(eventType == SPIKE)
-        sendSpikeEvent(event);
-    else
-        sendEvent(eventType,
-                  sampleNum,
-                  eventId,
-                  eventChannel,
-                  numBytes,
-                  dataptr+6);
+    sendEvent(eventType,
+              sampleNum,
+              eventId,
+              eventChannel,
+              numBytes,
+              dataptr+18);
 }
 
+
+// TODO: add handleSpike after fasion of EventBroadcaster
+void ZmqInterface::handleSpike(const SpikeChannel* channelInfo, const MidiMessage& event, int samplePosition)
+{
+    sendSpikeEvent(event);
+}
+
+// TODO: not needed anymore... but borrow the guts
 int ZmqInterface::receiveEvents(MidiBuffer &events)
 {
     
@@ -696,12 +716,10 @@ int ZmqInterface::receiveEvents(MidiBuffer &events)
     
         }
 
-
-            
-        
-        if(ed.isEvent)
-            addEvent(events, ed.type, ed.sampleNum, ed.eventId, ed.eventChannel, ed.numBytes, NULL, false);
-        // TODO allow for event data
+        // TODO: re-enable later, maybe
+//        if(ed.isEvent)
+//            addEvent(events, ed.type, ed.sampleNum, ed.eventId, ed.eventChannel, ed.numBytes, NULL, false);
+        // TODO: allow for event data
     }
 
     return 0;
@@ -724,8 +742,8 @@ void ZmqInterface::checkForApplications()
 
 }
 
-void ZmqInterface::process(AudioSampleBuffer& buffer,
-                           MidiBuffer& events)
+// TODO: double check and update if needed
+void ZmqInterface::process(AudioSampleBuffer& buffer)
 {
     if(!socket)
         createDataSocket();
@@ -734,11 +752,10 @@ void ZmqInterface::process(AudioSampleBuffer& buffer,
         openPipeOutSocket();
 
 
-    checkForEvents(events); // see if we got any TTL events
+    checkForEvents(true); // true == "including spikes"
 
     sendData(*(buffer.getArrayOfWritePointers()), buffer.getNumChannels(), buffer.getNumSamples(), getNumSamples(0));
     
-    receiveEvents(events);
     checkForApplications();
     
 }

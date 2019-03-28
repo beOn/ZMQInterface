@@ -86,7 +86,7 @@ public:
      number of continous samples in the current buffer (which may differ from the
      size of the buffer).
      */
-    virtual void process(AudioSampleBuffer& buffer, MidiBuffer& events);
+    virtual void process(AudioSampleBuffer& buffers);
     
     /** Any variables used by the "process" function _must_ be modified only through
      this method while data acquisition is active. If they are modified in any
@@ -126,15 +126,16 @@ private:
     int createDataSocket();
     int closeDataSocket();
 
-    void handleEvent(int eventType, MidiMessage& event, int sampleNum);
+    void handleEvent(const EventChannel* channelInfo, const MidiMessage& event, int samplePosition);
+    void handleSpike(const SpikeChannel* channelInfo, const MidiMessage& event, int samplePosition);
     int sendData(float *data, int nChannels, int nSamples, int nRealSamples);
     int sendEvent( uint8 type,
                   int sampleNum,
-                  uint8 eventId,
-                  uint8 eventChannel,
-                  uint8 numBytes,
+                  uint16_t eventId,
+                  uint16_t eventChannel,
+                  uint8_t numBytes,
                   const uint8* eventData);
-    int sendSpikeEvent(MidiMessage &event);
+    int sendSpikeEvent(const MidiMessage &event);
     
     int receiveEvents(MidiBuffer &events);
     void checkForApplications();
